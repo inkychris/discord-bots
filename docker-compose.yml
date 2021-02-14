@@ -1,0 +1,7 @@
+version: "3"
+services:
+  groovy_context_manager:
+    build: .
+    environment:
+      DISCORD_TOKEN: abc123
+    restart: always
