@@ -37,9 +37,6 @@ async def on_message(message):
 
 if __name__ == '__main__':
     import coloredlogs
-    import dotenv
-
-    dotenv.load_dotenv(dotenv.find_dotenv())
 
     API_TOKEN = os.getenv('DISCORD_TOKEN')
     if not API_TOKEN:
