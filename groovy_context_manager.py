@@ -6,12 +6,14 @@ import re
 import discord
 
 
-def looks_like_groovy_cmd(string):
+def _looks_like_groovy_cmd(string):
     return re.match(r'^\s*-\s*\w+\s*', string) is not None
 
 
 logger = logging.getLogger('groovy context manager')
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+client = discord.Client(intents=intents)
 
 
 @client.event
@@ -19,20 +21,31 @@ async def on_ready():
     logger.info(f'{client.user} connected to Discord!')
 
 
+async def warn_is_non_groovy_cmd(message):
+    await message.reply(
+        content=f"That message doesn't look like a groovy command, are you in the right channel?",
+        delete_after=10)
+
+
+async def warn_is_groovy_cmd(message):
+    await message.reply(
+        content=f"That message looks like a groovy command, are you in the right channel?",
+        delete_after=10)
+
+
 @client.event
 async def on_message(message):
     if message.author == client.user or message.author.bot:
         return
-    if message.channel.name == 'groovy':
-        if not looks_like_groovy_cmd(message.content):
-            await message.reply(
-                content=f"That message doesn't look like a groovy command, are you in the right channel?",
-                delete_after=10)
-    else:
-        if looks_like_groovy_cmd(message.content):
-            await message.reply(
-                content=f"That message looks like a groovy command, are you in the right channel?",
-                delete_after=10)
+
+    groovy_bot_in_channel = 234395307759108106 in (member.id for member in message.channel.members)
+    looks_like_groovy_text_channel = 'groovy' in message.channel.name.lower()
+    looks_like_groovy_cmd = _looks_like_groovy_cmd(message.content)
+
+    if groovy_bot_in_channel and looks_like_groovy_text_channel and not looks_like_groovy_cmd:
+        await warn_is_non_groovy_cmd(message)
+    elif not groovy_bot_in_channel and looks_like_groovy_cmd:
+        await warn_is_groovy_cmd(message)
 
 
 if __name__ == '__main__':
